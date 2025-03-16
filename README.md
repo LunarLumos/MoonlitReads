@@ -1,5 +1,4 @@
 
-```markdown
 # MoonlitReads
 
 Welcome to **MoonlitReads** – my personal collection of digital books in PDF format. Below is an index of all the books currently stored in this repository.
