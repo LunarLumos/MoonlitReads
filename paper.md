@@ -44,12 +44,53 @@ The AttLSTM architecture consists of a two-layer bidirectional LSTM with input s
 
 Two ensemble strategies are considered in the final stage. The first is a stacking ensemble over SVM, XGBoost, and LightGBM using logistic regression as a meta-learner with 5-fold stratified cross-validation and probabilistic stacking [12]. The second is a four-model probability blend that combines SVM, XGBoost, LightGBM, and AttLSTM outputs through an equal-weight average. Because this blend is applied to held-out model outputs without fitting a new meta-classifier on the same evaluation split, it is treated as a leakage-safe probability fusion step.
 
+### 2.4 Mathematical formulation
+Let the dataset be $D=\{(x_i,y_i)\}_{i=1}^{N}$, where $x_i$ is the fused feature vector and $y_i\in\{0,1\}$ is the class label. The probability output of model $m$ for the positive class is denoted by $p_m(y=1\mid x_i)$.
+
+For the AttLSTM classifier, training is performed with cross-entropy loss:
+
+$$
+\mathcal{L}_{CE}=-\frac{1}{N}\sum_{i=1}^{N}\sum_{c\in\{0,1\}}\mathbf{1}(y_i=c)\log p_{ic}
+$$
+
+where $p_{ic}$ is the predicted probability that sample $i$ belongs to class $c$.
+
+For probability-level fusion, the 4-model blend score is defined as:
+
+$$
+\hat{p}_i=\sum_{m=1}^{4}w_m\,p_m(y=1\mid x_i),\qquad \sum_{m=1}^{4}w_m=1
+$$
+
+with equal weights $w_m=0.25$. The final class prediction is obtained by thresholding: $\hat{y}_i=\mathbf{1}(\hat{p}_i\ge 0.5)$.
+
 ## 3 Results
 
 ### 3.1 Evaluating matrices
 Model performance is evaluated using Accuracy, Sensitivity, Specificity, Precision, F1-score, Matthews Correlation Coefficient (MCC), and Area Under the ROC Curve (AUC). Accuracy measures overall correctness, while sensitivity and specificity describe the model’s ability to identify positive and negative samples, respectively. Precision and F1-score evaluate positive-class reliability, MCC provides a balanced correlation-based measure even under class imbalance, and AUC reflects threshold-independent discriminative performance. Together, these metrics provide a comprehensive evaluation of the predictive models.
 
 In the evaluation workflow, all metrics are computed from the confusion matrix generated on the independent test split. Probabilistic outputs are obtained from posterior class probabilities for SVM, XGBoost, and LightGBM, and from softmax-normalized outputs for AttLSTM. This unified metric computation allows direct comparison between classical learners, deep learning, and ensemble fusion models. A ROC-based visual summary of the single-view models should be presented in Fig. 4.
+
+Given confusion-matrix counts True Positive (TP), True Negative (TN), False Positive (FP), and False Negative (FN), the metrics are computed as:
+
+$$
+	ext{Accuracy}=\frac{TP+TN}{TP+TN+FP+FN}
+$$
+
+$$
+	ext{Sensitivity (Recall)}=\frac{TP}{TP+FN},\qquad
+	ext{Specificity}=\frac{TN}{TN+FP}
+$$
+
+$$
+	ext{Precision}=\frac{TP}{TP+FP},\qquad
+	ext{F1}=\frac{2\cdot \text{Precision}\cdot \text{Recall}}{\text{Precision}+\text{Recall}}
+$$
+
+$$
+	ext{MCC}=\frac{TP\cdot TN-FP\cdot FN}{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}
+$$
+
+For threshold-independent analysis, ROC-AUC is computed from predicted probabilities by integrating the ROC curve over all classification thresholds.
 
 ### 3.2 Performance comparison of three single-view features
 
@@ -101,22 +142,22 @@ At the ensemble level, two fusion strategies were used. The 3-model ensemble emp
 ### 3.5 Comparison with existing methods
 To position the present method relative to representative literature, performance values from a DeepNeuropePred-centered comparison setting are summarized below [14].
 
-| Model | Precision | Recall | F1-score | MCC | ACC | AUPRC |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Motif | 0.74 | 0.83 | 0.78 | 0.56 | 0.80 | 0.48 |
-| Mammalian | 0.70 | 0.75 | 0.72 | 0.45 | 0.78 | 0.56 |
-| Insect | 0.69 | 0.74 | 0.71 | 0.43 | 0.78 | 0.49 |
-| Mollusc | 0.71 | 0.79 | 0.75 | 0.49 | 0.77 | 0.64 |
-| DeepNeuropePred | 0.81 | 0.84 | 0.82 | 0.65 | 0.87 | 0.78 |
+| Model | Precision | Recall | F1-score | MCC | ACC |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Motif | 0.74 | 0.83 | 0.78 | 0.56 | 0.80 |
+| Mammalian | 0.70 | 0.75 | 0.72 | 0.45 | 0.78 |
+| Insect | 0.69 | 0.74 | 0.71 | 0.43 | 0.78 |
+| Mollusc | 0.71 | 0.79 | 0.75 | 0.49 | 0.77 |
+| DeepNeuropePred | 0.81 | 0.84 | 0.82 | 0.65 | 0.87 |
 
 To directly compare with our own findings, Table below contrasts DeepNeuropePred [14] with the best model from this study (4-Model Blend on fused ProtBERT+ProtT5+ESM-2 features).
 
-| Model | Precision | Recall | F1-score | MCC | ACC | AUPRC |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| DeepNeuropePred [14] | 0.81 | 0.84 | 0.82 | 0.65 | 0.87 | 0.78 |
-| Proposed 4-Model Blend (this study) | 0.9034 | 0.9071 | 0.9052 | 0.8101 | 0.9051 | N/A |
+| Model | Precision | Recall | F1-score | MCC | ACC |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| DeepNeuropePred [14] | 0.81 | 0.84 | 0.82 | 0.65 | 0.87 |
+| Proposed 4-Model Blend (this study) | 0.9034 | 0.9071 | 0.9052 | 0.8101 | 0.9051 |
 
-Compared with DeepNeuropePred, our best model shows higher Precision (+0.0934), Recall (+0.0671), F1-score (+0.0852), MCC (+0.1601), and ACC (+0.0351) on the reported evaluation setup. However, this should still be interpreted carefully because the two studies target different prediction tasks (cleavage-site prediction versus sequence-level classification) and do not report fully identical evaluation protocols. Accordingly, the present framework should be considered a complementary and reproducible direction within protein language model based neuropeptide prediction, rather than a strict task-equivalent replacement.
+Compared with DeepNeuropePred, our best model shows higher Precision (+0.0934), Recall (+0.0671), F1-score (+0.0852), MCC (+0.1601), and ACC (+0.0351) on the reported evaluation setup. AUPRC is not compared in this manuscript to avoid mixing non-identical reporting protocols across tasks. This interpretation should still remain cautious because the two studies target different prediction objectives (cleavage-site prediction versus sequence-level classification). Accordingly, the present framework should be considered a complementary and reproducible direction within protein language model based neuropeptide prediction, rather than a strict task-equivalent replacement.
 
 ## 4 Conclusion
 In summary, this study investigates a multi-view neuropeptide prediction framework based on ProtBERT, ProtT5, and ESM-2 embeddings and ties every methodological claim to a concrete analytical stage. The pipeline covers sequence sanitization, model-specific tokenization, PLM feature extraction, deterministic cross-view alignment, standardized feature fusion, classifier-level hyperparameter optimization, neural attention-based learning, and both stacking and probability-based ensemble fusion. The results show that ProtT5 is the best single-view representation, while hybrid feature fusion consistently improves prediction quality across all classifiers. The best overall result is obtained by the 4-model blend, which achieves 0.9051 accuracy, 0.9052 F1-score, 0.8101 MCC, and 0.9592 AUC. These findings indicate that combining complementary protein language model embeddings is an effective strategy for improving neuropeptide prediction. Although the present method does not outperform the strongest published capsule-based model, it provides a realistic, reproducible, technically detailed, and conference-appropriate baseline for future research.
