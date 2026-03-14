@@ -43,12 +43,39 @@ The AttLSTM architecture is implemented as a two-layer bidirectional LSTM with i
 
 Two ensemble strategies are used. The first is a stacking ensemble over SVM, XGBoost, and LightGBM using logistic regression as a meta-learner with 5-fold stratified cross-validation and probabilistic stacking. The second is a four-model probability blend that combines SVM, XGBoost, LightGBM, and AttLSTM outputs through an equal-weight average. Because this blend operates directly on held-out probabilities without fitting a meta-classifier on the same evaluation set, it is described as a leakage-safe probability fusion step.
 
+### 2.4 Recommended figure placement
+To make the conference version visually complete, the following figures should be added in the indicated sections:
+
+1. Figure 1 (end of Introduction): Overall workflow diagram.
+	Suggested content: sequence input, three transformer embedding branches (ProtBERT/ProtT5/ESM-2), feature fusion, model training, blend output.
+	Suggested caption: Overall framework for computational prediction of neuropeptides using transformer-based representations and blend-model classification.
+
+2. Figure 2 (after Section 2.2): Embedding extraction and fusion schematic.
+	Suggested content: dimension flow 768 + 1024 + 1280 -> 3072, then standardization and train/test split.
+	Suggested caption: Multi-view embedding extraction and hybrid feature construction.
+
+3. Figure 3 (after Section 2.3): AttLSTM architecture diagram.
+	Suggested content: input vector, unsqueeze, BiLSTM (2 layers), attention block, FC head (512 -> 256 -> 2).
+	Suggested caption: Attention-based bidirectional LSTM model used in the hybrid training stage.
+
+4. Figure 4 (in Results, before Table II): Single-view ROC comparison.
+	Suggested content: ROC curves for ProtBERT, ProtT5, and ESM-2 (best classifier per view or one fixed classifier across views).
+	Suggested caption: ROC analysis for single-view transformer embeddings.
+
+5. Figure 5 (in Results, before Table III): Hybrid-space model comparison chart.
+	Suggested content: grouped bars for Accuracy, F1, MCC, AUC across SVM/XGBoost/LightGBM/AttLSTM/Ensemble/4-model blend.
+	Suggested caption: Performance comparison of models on fused transformer feature space.
+
+6. Figure 6 (after Section 3.3): Confusion matrix of best model.
+	Suggested content: confusion matrix for 4-model blend on independent test set.
+	Suggested caption: Confusion matrix of the final blend model on independent test data.
+
 ## 3 Results
 
 ### 3.1 Evaluating matrices
 Model performance is evaluated using Accuracy, Sensitivity, Specificity, Precision, F1-score, Matthews Correlation Coefficient (MCC), and Area Under the ROC Curve (AUC). Accuracy measures overall correctness, while sensitivity and specificity describe the model’s ability to identify positive and negative samples, respectively. Precision and F1-score evaluate positive-class reliability, MCC provides a balanced correlation-based measure even under class imbalance, and AUC reflects threshold-independent discriminative performance. Together, these metrics provide a comprehensive evaluation of the predictive models.
 
-In the evaluation workflow, all metrics are computed from the confusion matrix generated on the independent test split. Probabilistic outputs are obtained from posterior class probabilities for SVM, XGBoost, and LightGBM, and from softmax-normalized outputs for AttLSTM. This unified metric computation allows direct comparison between classical learners, deep learning, and ensemble fusion models.
+In the evaluation workflow, all metrics are computed from the confusion matrix generated on the independent test split. Probabilistic outputs are obtained from posterior class probabilities for SVM, XGBoost, and LightGBM, and from softmax-normalized outputs for AttLSTM. This unified metric computation allows direct comparison between classical learners, deep learning, and ensemble fusion models. A visual ROC-based comparison should be provided in Figure 4.
 
 ### 3.2 Performance comparison of three single-view features
 
@@ -81,6 +108,8 @@ Table II shows that ProtT5 is the strongest single-view embedding in this study.
 | 4-Model Blend (SVM+XGB+LGB+AttLSTM) | 0.9051 | 0.9071 | 0.9030 | 0.9034 | 0.9052 | 0.8101 | 0.9592 |
 
 Table III demonstrates that hybrid feature fusion improves predictive consistency across all models. After combining the 1024-dimensional ProtT5, 768-dimensional ProtBERT, and 1280-dimensional ESM-2 embeddings into a standardized 3072-dimensional representation, every classifier achieves close to or above 0.89 accuracy, which is higher and more stable than most single-view results. Among the standalone models, LightGBM performs best, reaching 0.9020 accuracy, 0.9027 F1-score, 0.8041 MCC, and 0.9593 AUC. The 3-model ensemble further improves overall stability, while the final 4-model blend achieves the best overall performance with 0.9051 accuracy and 0.8101 MCC. These results indicate that the major gain arises from feature-level fusion of complementary embeddings, whereas model-level blending provides an additional but smaller improvement. Therefore, Table III confirms that hybrid representation learning is the main reason for the observed performance increase.
+
+The corresponding visual summary should be included as Figure 5, and the best-model confusion matrix should be presented as Figure 6 for error pattern interpretation.
 
 ### 3.3 Proposed model Hyperparameter tuning
 The methodological study contains two hyperparameter analysis layers. First, standalone benchmarking compares untuned default models against tuned models on each individual embedding view. In this setting, SVM is evaluated with linear, RBF, polynomial, and sigmoid kernels under 5-fold grid search; XGBoost and LightGBM are evaluated with explicit default-versus-grid-search comparisons; and the neural baseline study includes several architectures such as a fixed attention LSTM, an improved self-attention LSTM, and an MLP-style baseline. These standalone experiments provide methodological context for the per-view comparisons reported earlier.
