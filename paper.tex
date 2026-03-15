@@ -16,7 +16,7 @@
 \maketitle
 
 \begin{abstract}
-Accurate identification of neuropeptides is important for understanding peptide-mediated signaling and for supporting peptide-oriented therapeutic discovery. Neuropeptides partic- ipate in a broad spectrum of biological activities, including neurotransmission, endocrine regulation, metabolism, stress response, and intercellular communication. Nevertheless, experimental identification of neuropeptides is labor-intensive, time-consuming, and not al- ways practical for large-scale screening. Therefore, an effective computational framework for sequence-based neuropeptide prediction is highly desirable. In this study, we propose a transformer-based multi-view prediction framework that integrates ProtBERT, ProtT5, and ESM-2 representations with hybrid machine learning and blend learning. First, three pre- trained protein language models are used to extract complementary contextual and semantic information from peptide sequences. Second, the resulting feature spaces are concatenated into a unified 3072-dimensional representation and standardized for downstream classifica- tion. Lastly, the four predictive models (SVM, XGBoost, LightGBM, and AttLSTM) were generated as independent outputs from training and testing of the models, and were subsequently combined using a leakage-free probability-based blending method. Results from these experiments highlighted that the performance of the aggregate transformer representation (i.e., after probability-based aggregation) consistently enhanced performance compared to using an individual representation for each model. Among the single-model classifiers, LightGBM produced the best empirical results when considered as a stand-alone classifier; whereas, the final multi-model blend produced the highest accuracy (0.9051) and F1-score (0.9052), as well as the highest MCC (0.8101), and the highest AUC (0.9592) for the independent test dataset. These findings suggest that using multi-view transformer representations along with aggregation by way of probability blending is an effective and reproducible method for neuropeptide prediction.
+Accurate identification of neuropeptides is important for understanding peptide-mediated signaling and for supporting peptide-oriented therapeutic discovery. Neuropeptides partic- ipate in a broad spectrum of biological activities, including neurotransmission, endocrine regulation, metabolism, stress response, and intercellular communication. Nevertheless, experimental identification of neuropeptides is labor-intensive, time-consuming, and not al- ways practical for large-scale screening. Therefore, an effective computational framework for sequence-based neuropeptide prediction is highly desirable. In this study, we propose a transformer-based multi-view prediction framework that integrates ProtBERT, ProtT5, and ESM-2 representations with hybrid machine learning and blend learning. First, three pre- trained protein language models are used to extract complementary contextual and semantic information from peptide sequences. Second, the resulting feature spaces are concatenated into a unified 3328-dimensional representation and standardized for downstream classifica- tion. Lastly, the four predictive models (SVM, XGBoost, LightGBM, and AttLSTM) were generated as independent outputs from training and testing of the models, and were subsequently combined using a leakage-free probability-based blending method. Results from these experiments highlighted that the performance of the aggregate transformer representation (i.e., after probability-based aggregation) consistently enhanced performance compared to using an individual representation for each model. Among the single-model classifiers, LightGBM produced the best empirical results when considered as a stand-alone classifier; whereas, the final multi-model blend produced the highest accuracy (0.9051) and F1-score (0.9052), as well as the highest MCC (0.8101), and the highest AUC (0.9592) for the independent test dataset. These findings suggest that using multi-view transformer representations along with aggregation by way of probability blending is an effective and reproducible method for neuropeptide prediction.
 \end{abstract}
 
 \noindent\textbf{Keywords:} Neuropeptide prediction; protein language model; ProtBERT; ProtT5; ESM-2; feature fusion; ensemble learning
@@ -26,9 +26,16 @@ Neuropeptides are short bioactive signaling molecules that regulate a diverse ra
 
 Earlier neuropeptide prediction methods mainly relied on handcrafted sequence descriptors and conventional machine learning models [3--6]. Although these methods achieved useful predictive performance, their effectiveness depends heavily on the quality of manually designed features. In recent years, transformer-based protein language models have substantially improved biological sequence representation by learning contextual and semantic information from large-scale unlabeled protein corpora [7--11]. Such representations have shown clear promise in a range of downstream protein analysis tasks. However, a single protein language model does not necessarily capture all relevant aspects of peptide sequence behavior. Since different pretrained models are optimized with different objectives and corpora, they often provide complementary feature spaces.
 
-Motivated by this observation, we investigate a multi-view learning strategy for neuropeptide prediction. The proposed framework integrates three transformer-derived representations, ProtBERT, ProtT5, and ESM-2, and combines them with both conventional machine learning and neural classification. Rather than depending on a single classifier, the framework also includes ensemble learning through stacking and probability-level blending. The overall workflow of the proposed method should be summarized in Fig. 1. The central objective of this study is to determine whether reproducible feature fusion and blend learning can improve neuropeptide prediction under a transparent and practically deployable evaluation setting.
+Motivated by this observation, we investigate a multi-view learning strategy for neuropeptide prediction. The proposed framework integrates three transformer-derived representations, ProtBERT, ProtT5, and ESM-2, and combines them with both conventional machine learning and neural classification. Rather than depending on a single classifier, the framework also includes ensemble learning through stacking and probability-level blending. \textbf{The overall workflow of the proposed method should be summarized in Fig. 1.} The central objective of this study is to determine whether reproducible feature fusion and blend learning can improve neuropeptide prediction under a transparent and practically deployable evaluation setting.
 
 Recent work in the same research line has demonstrated that protein language models can effectively support neuropeptide-related prediction tasks, including cleavage-site prediction from neuropeptide precursors [14]. The present study is methodologically aligned with that direction but addresses a different prediction objective. Specifically, instead of predicting precursor cleavage positions, we focus on sequence-level neuropeptide classification and examine whether multi-view embedding fusion plus leakage-safe probability blending can provide strong and reproducible performance in this setting.
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig1.pdf}
+    \caption{Systematic workflow of the proposed framework.}
+    \label{fig:1}
+\end{figure*}
 
 \section{Methodology}
 \subsection{Dataset construction}
@@ -37,12 +44,19 @@ The experiments are conducted on a balanced benchmark dataset consisting of trai
 Before feature extraction, all raw sequences are subjected to a uniform preprocessing procedure. Nonalphabetic characters are removed, residues are normalized to uppercase, and empty or invalid entries are discarded. After preprocessing, the resulting samples are organized into positive, negative, and combined datasets for each representation view and each split. This design preserves a consistent feature-first format with the target label located in the last column.
 
 \subsection{Sequence encoding}
-To capture complementary sequence information, three pretrained protein language model embeddings are used as separate feature views. Each model generates a numerical representation of the same peptide samples, thereby enabling both single-view evaluation and multi-view fusion. The final fused representation is obtained through horizontal concatenation of ProtT5, ProtBERT, and ESM-2 descriptors, resulting in a 3072-dimensional feature vector per sample. The feature extraction and fusion process should be illustrated in Fig. 2.
+To capture complementary sequence information, three pretrained protein language model embeddings are used as separate feature views. Each model generates a numerical representation of the same peptide samples, thereby enabling both single-view evaluation and multi-view fusion. The final fused representation is obtained through horizontal concatenation of ProtT5, ProtBERT, and ESM-2 descriptors, resulting in a 3328-dimensional feature vector per sample.\textbf{ The feature extraction and fusion process should be illustrated in Fig. 2.}
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig2_embedding_fusion.png}
+    \caption{Systematic workflow of the proposed framework.}
+    \label{fig:1}
+\end{figure*}
 
 The feature extraction stage uses transformer-based pretrained models for ProtBERT and ProtT5 together with the FAIR ESM-2 model \texttt{esm2\_t33\_650M\_UR50D}. For ProtBERT and ProtT5, amino-acid sequences are tokenized by inserting spaces between residues to satisfy model-specific tokenization requirements. In contrast, ESM-2 receives the original sequence form through its native alphabet batch converter.
 
 \subsubsection{ProtBERT}
-ProtBERT is used as the first sequence representation method. It provides contextual embeddings derived from transformer-based pretraining on large protein databases [8,10]. In the overall workflow, ProtBERT contributes a 768-dimensional feature block to both the single-view experiments and the final fused representation. Feature extraction is performed by forwarding tokenized sequences through \texttt{Rostlab/prot\_bert} and selecting the final hidden-state vector of the CLS token. In this study, ProtBERT serves as a baseline semantic representation for evaluating single-view predictive performance.
+ProtBERT is used as the first sequence representation method. It provides contextual embeddings derived from transformer-based pretraining on large protein databases [8,10]. In the overall workflow, ProtBERT contributes a 1024-dimensional feature block to both the single-view experiments and the final fused representation. Feature extraction is performed by forwarding tokenized sequences through \texttt{Rostlab/prot\_bert} and selecting the final hidden-state vector of the CLS token. In this study, ProtBERT serves as a baseline semantic representation for evaluating single-view predictive performance.
 
 \subsubsection{T5}
 ProtT5 is used as the second representation method. It captures rich contextual information and, in the present experiments, provides the strongest single-view performance among the tested embeddings. ProtT5 contributes a 1024-dimensional feature block. Feature extraction is performed with \texttt{Rostlab/prot\_t5\_xl\_half\_uniref50-enc}, and the final representation is obtained by mean pooling the encoder hidden states across the sequence dimension [9,10]. This suggests that ProtT5 preserves discriminative information relevant to neuropeptide classification more effectively than the other individual views.
@@ -50,12 +64,19 @@ ProtT5 is used as the second representation method. It captures rich contextual 
 \subsubsection{ESM-2}
 ESM-2 is used as the third embedding source. It offers another large-scale protein representation that captures complementary contextual and structural information [11]. In the fused pipeline, ESM-2 contributes a 1280-dimensional feature block. The implementation extracts layer-33 token representations from \texttt{esm2\_t33\_650M\_UR50D} and applies mean pooling over nonpadding residues while excluding special tokens. Although its performance is generally slightly below ProtT5, it remains competitive and contributes useful information when combined with other embeddings.
 
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig3_attlstm_architecture.png}
+    \caption{Systematic workflow of the proposed framework.}
+    \label{fig:1}
+\end{figure*}
+
 \subsection{Proposed model architecture}
-The proposed framework follows a two-stage design. In the first stage, ProtBERT, ProtT5, and ESM-2 embeddings are aligned and concatenated to form a hybrid feature space. To ensure valid multi-view fusion, the three representation branches are subjected to a deterministic alignment procedure so that identical biological samples remain row-matched across all feature sources. The final 3072-dimensional vector is then standardized using \texttt{StandardScaler} before model training.
+The proposed framework follows a two-stage design. In the first stage, ProtBERT, ProtT5, and ESM-2 embeddings are aligned and concatenated to form a hybrid feature space. To ensure valid multi-view fusion, the three representation branches are subjected to a deterministic alignment procedure so that identical biological samples remain row-matched across all feature sources. The final 3328-dimensional vector is then standardized using \texttt{StandardScaler} before model training.
 
 In the second stage, the fused representation is used to train SVM, XGBoost, LightGBM, and AttLSTM models. The classical models are optimized by \texttt{RandomizedSearchCV} with \texttt{StratifiedKFold} cross-validation using \texttt{n\_splits=3}, \texttt{shuffle=True}, and \texttt{random\_state=42}, while ROC-AUC is used as the search objective. The SVM search covers linear and radial basis function kernels, whereas the tree-based models search over estimator count, tree depth, learning rate, subsampling, and regularization parameters.
 
-The AttLSTM architecture consists of a two-layer bidirectional LSTM with input size equal to the fused feature dimension, hidden size 256, dropout 0.3, and batch-first layout. The fused input vector is first reshaped into a one-step sequence, passed through the bidirectional recurrent layer, and then processed by an attention projection layer of size 512 to 1. The attention-weighted hidden representation is subsequently passed to a fully connected classification head with topology 512 to 256 to 2, using ReLU activation and dropout regularization. Training is performed with \texttt{CrossEntropyLoss} and \texttt{AdamW} at learning rate 0.001 for 50 epochs using deterministic mini-batch shuffling. The neural architecture should be illustrated in Fig. 3.
+The AttLSTM architecture consists of a two-layer bidirectional LSTM with input size equal to the fused feature dimension, hidden size 256, dropout 0.3, and batch-first layout. The fused input vector is first reshaped into a one-step sequence, passed through the bidirectional recurrent layer, and then processed by an attention projection layer of size 512 to 1. The attention-weighted hidden representation is subsequently passed to a fully connected classification head with topology 512 to 256 to 2, using ReLU activation and dropout regularization. Training is performed with \texttt{CrossEntropyLoss} and \texttt{AdamW} at learning rate 0.001 for 50 epochs using deterministic mini-batch shuffling. \textbf{The neural architecture should be illustrated in Fig. 3.}
 
 Two ensemble strategies are considered in the final stage. The first is a stacking ensemble over SVM, XGBoost, and LightGBM using logistic regression as a meta-learner with 5-fold stratified cross-validation and probabilistic stacking [12]. The second is a four-model probability blend that combines SVM, XGBoost, LightGBM, and AttLSTM outputs through an equal-weight average. Because this blend is applied to held-out model outputs without fitting a new meta-classifier on the same evaluation split, it is treated as a leakage-safe probability fusion step.
 
@@ -78,7 +99,7 @@ with equal weights $w_m=0.25$. The final class prediction is obtained by thresho
 \subsection{Evaluating matrices}
 To determine model performance, accuracy, sensitivity, specificity, precision, F1-score, MCC, and AUC are used. Accuracy measures the total number of correct classifications. Sensitivity indicates how well the model identifies all positive samples and specificity indicates how well the model identifies all negative samples. Precision measures how reliable the positive class is, while F1-score combines both precision and recall to measure how reliable the positive class is. MCC provides a balanced measure of correlation between the predicted labels and actual labels in the presence of class imbalance. AUC represents class-independent discrimination ability of the predictive model. Using these seven metrics allows for a thorough evaluation of predictive performance.
 
-In the evaluation workflow, all metrics are computed from the confusion matrix generated on the independent test split. Probabilistic outputs are obtained from posterior class probabilities for SVM, XGBoost, and LightGBM, and from softmax-normalized outputs for AttLSTM. This unified metric computation allows direct comparison between classical learners, deep learning, and ensemble fusion models. A ROC-based visual summary of the single-view models should be presented in Fig. 4.
+In the evaluation workflow, all metrics are computed from the confusion matrix generated on the independent test split. Probabilistic outputs are obtained from posterior class probabilities for SVM, XGBoost, and LightGBM, and from softmax-normalized outputs for AttLSTM. This unified metric computation allows direct comparison between classical learners, deep learning, and ensemble fusion models. \textbf{A ROC-based visual summary of the single-view models should be presented in Fig. 4.}
 
 Given confusion-matrix counts True Positive (TP), True Negative (TN), False Positive (FP), and False Negative (FN), the metrics are computed as:
 \begin{align}
@@ -114,12 +135,22 @@ AttLSTM & ESM-2 & 0.7798 & 0.7859 & 0.7737 & 0.7764 & 0.7811 & 0.5596 & 0.8450 \
 \end{tabular}}
 \end{table}
 
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig4_single_view_auc_heatmap.png}
+    \caption{Systematic workflow of the proposed framework.}
+    \label{fig:1}
+\end{figure*}
+
 Table II shows that ProtT5 is the strongest single-view embedding in this study. For SVM, XGBoost, and LightGBM, ProtT5 produces the best or nearly best values across accuracy, F1-score, MCC, and AUC, indicating that it captures the most discriminative sequence information among the three individual embeddings. ESM-2 also performs competitively and remains close to ProtT5 in several cases, whereas ProtBERT generally shows lower predictive strength. A notable observation is that AttLSTM is highly sensitive to the choice of embedding and performs poorly on ProtBERT, but improves substantially when trained on ProtT5 or ESM-2. This behavior is technically reasonable because the tree-based learners and margin-based SVM operate directly on fixed embedding vectors, whereas the AttLSTM receives the feature vector as a sequence of length 1 after unsqueezing, making its performance more dependent on the quality of the input representation. Overall, the results from Table II suggest that while single-view PLM embeddings are informative, their performance remains limited compared with the fused representation used later in the study.
 
 \subsection{Performance comparison on hybrid feature space}
+
 \begin{table}[htbp]
 \centering
 \caption{Performance comparison on fused hybrid features.}
+
+\resizebox{\linewidth}{!}{
 \begin{tabular}{l c c c c c c c}
 \toprule
 Model & Accuracy & Sensitivity & Specificity & Precision & F1 & MCC & AUC \\
@@ -132,11 +163,31 @@ Ensemble (SVM+XGB+LGB) & 0.8990 & 0.8990 & 0.8990 & 0.8990 & 0.8990 & 0.7980 & 0
 4-Model Blend (SVM+XGB+LGB+AttLSTM) & 0.9051 & 0.9071 & 0.9030 & 0.9034 & 0.9052 & 0.8101 & 0.9592 \\
 \bottomrule
 \end{tabular}
+}
+
 \end{table}
 
-Table III demonstrates that hybrid feature fusion improves predictive consistency across all models. After combining the 1024-dimensional ProtT5, 768-dimensional ProtBERT, and 1280-dimensional ESM-2 embeddings into a standardized 3072-dimensional representation, every classifier achieves close to or above 0.89 accuracy, which is higher and more stable than most single-view results. Among the standalone models, LightGBM performs best, reaching 0.9020 accuracy, 0.9027 F1-score, 0.8041 MCC, and 0.9593 AUC. The 3-model ensemble further improves overall stability, while the final 4-model blend achieves the best overall performance with 0.9051 accuracy and 0.8101 MCC. These results indicate that the major gain arises from feature-level fusion of complementary embeddings, whereas model-level blending provides an additional but smaller improvement. Therefore, Table III confirms that hybrid representation learning is the main reason for the observed performance increase.
+Table III demonstrates that hybrid feature fusion improves predictive consistency across all models. After combining the 1024-dimensional ProtT5, 1024-dimensional ProtBERT, and 1280-dimensional ESM-2 embeddings into a standardized 3328-dimensional representation, every classifier achieves close to or above 0.89 accuracy, which is higher and more stable than most single-view results. Among the standalone models, LightGBM performs best, reaching 0.9020 accuracy, 0.9027 F1-score, 0.8041 MCC, and 0.9593 AUC. The 3-model ensemble further improves overall stability, while the final 4-model blend achieves the best overall performance with 0.9051 accuracy and 0.8101 MCC. These results indicate that the major gain arises from feature-level fusion of complementary embeddings, whereas model-level blending provides an additional but smaller improvement. Therefore, Table III confirms that hybrid representation learning is the main reason for the observed performance increase.
 
-The corresponding visual summary of fused-space model comparison should be presented in Fig. 5, and the confusion matrix of the best-performing blend model should be shown in Fig. 6 for error pattern interpretation.
+\textbf{The corresponding visual summary of fused-space model comparison should be presented in Fig. 5, and the confusion matrix of the best-performing blend model should be shown in Fig. 6 for error pattern interpretation.}
+
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig5_hybrid_model_comparison.png}
+    \caption{Systematic workflow of the proposed framework.}
+    \label{fig:1}
+\end{figure*}
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig6_best_blend_confusion_matrix.png}
+    \caption{Systematic workflow of the proposed framework.}
+    \label{fig:1}
+\end{figure*}
+
+
+
 
 \subsection{Proposed model hyperparameter tuning}
 The methodological study contains two hyperparameter analysis layers. First, standalone benchmarking compares untuned default models against tuned models on each individual embedding view. In this setting, SVM is evaluated with linear, RBF, polynomial, and sigmoid kernels under 5-fold grid search; XGBoost and LightGBM are evaluated with explicit default-versus-grid-search comparisons; and the neural baseline study includes several architectures such as a fixed attention LSTM, an improved self-attention LSTM, and an MLP-style baseline. These standalone experiments provide methodological context for the per-view comparisons reported earlier.
@@ -186,6 +237,7 @@ Proposed 4-Model Blend (this study) & 0.9034 & 0.9071 & 0.9052 & 0.8101 & 0.9051
 \end{table}
 
 Compared with DeepNeuropePred, our best model shows higher Precision (+0.0934), Recall (+0.0671), F1-score (+0.0852), MCC (+0.1601), and ACC (+0.0351) on the reported evaluation setup. AUPRC is not compared in this manuscript to avoid mixing non-identical reporting protocols across tasks. This interpretation should still remain cautious because the two studies target different prediction objectives (cleavage-site prediction versus sequence-level classification). Accordingly, the present framework should be considered a complementary and reproducible direction within protein language model based neuropeptide prediction, rather than a strict task-equivalent replacement.
+
 
 \section{Conclusion}
 In summary, this study investigates a multi-view neuropeptide prediction framework based on ProtBERT, ProtT5, and ESM-2 embeddings and ties every methodological claim to a concrete analytical stage. The pipeline covers sequence sanitization, model-specific tokenization, PLM feature extraction, deterministic cross-view alignment, standardized feature fusion, classifier-level hyperparameter optimization, neural attention-based learning, and both stacking and probability-based ensemble fusion. The results show that ProtT5 is the best single-view representation, while hybrid feature fusion consistently improves prediction quality across all classifiers. The best overall result is obtained by the 4-model blend, which achieves 0.9051 accuracy, 0.9052 F1-score, 0.8101 MCC, and 0.9592 AUC. These findings indicate that combining complementary protein language model embeddings is an effective strategy for improving neuropeptide prediction. Although the present method does not outperform the strongest published capsule-based model, it provides a realistic, reproducible, technically detailed, and conference-appropriate baseline for future research.
